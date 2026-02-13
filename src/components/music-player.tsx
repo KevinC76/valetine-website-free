@@ -23,18 +23,70 @@ export function MusicPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Check if audio file exists
-    audio.addEventListener("loadeddata", () => {
+    // Transition volumes smoothly
+    const fadeIn = () => {
+      audio.volume = 0;
+      let volume = 0;
+      const interval = setInterval(() => {
+        if (volume < 0.5) {
+          volume += 0.05;
+          audio.volume = Math.min(0.5, volume);
+        } else {
+          clearInterval(interval);
+        }
+      }, 50);
+    };
+
+    const attemptPlay = () => {
+      if (!audio.paused) return; // Already playing
+
+      audio.play().then(() => {
+        setIsPlaying(true);
+        fadeIn();
+        // Once playing, we can remove the interaction listeners
+        removeInteractionListeners();
+      }).catch(err => {
+        console.log("Playback attempt failed:", err.message);
+      });
+    };
+
+    const removeInteractionListeners = () => {
+      window.removeEventListener("click", attemptPlay);
+      window.removeEventListener("touchstart", attemptPlay);
+      window.removeEventListener("scroll", attemptPlay);
+    };
+
+    const addInteractionListeners = () => {
+      window.addEventListener("click", attemptPlay);
+      window.addEventListener("touchstart", attemptPlay);
+      window.addEventListener("scroll", attemptPlay);
+    };
+
+    // Attach interaction listeners immediately to catch early clicks
+    addInteractionListeners();
+
+    const handleLoadedData = () => {
       setIsLoaded(true);
-    });
+      attemptPlay(); // Try playing as soon as we have enough data
+    };
+
+    // Check if data is already loaded (common during hydration/navigation)
+    if (audio.readyState >= 2) {
+      handleLoadedData();
+    } else {
+      audio.addEventListener("canplaythrough", handleLoadedData);
+    }
 
     audio.addEventListener("error", () => {
       setIsLoaded(false);
-      console.info("No background music file found. Add your music to /public/audio/background-music.mp3");
+      removeInteractionListeners();
+      console.info("Music file not accessible. Placeholder mode active.");
     });
 
     return () => {
       audio.pause();
+      removeInteractionListeners();
+      audio.removeEventListener("canplaythrough", handleLoadedData);
     };
   }, []);
 
@@ -73,23 +125,11 @@ export function MusicPlayer() {
     setIsPlaying(!isPlaying);
   };
 
-  // Don't show the button if there's no audio file
-  if (!isLoaded) {
-    return (
-      <>
-        <audio ref={audioRef} loop>
-          <source src="/audio/background-music.mp3" type="audio/mpeg" />
-        </audio>
-      </>
-    );
-  }
 
   return (
     <>
       {/* Audio Element */}
-      <audio ref={audioRef} loop>
-        <source src="/audio/background-music.mp3" type="audio/mpeg" />
-      </audio>
+      <audio ref={audioRef} loop src="/audio/background-music.mp3"></audio>
 
       {/* Music Control Button */}
       <motion.div
