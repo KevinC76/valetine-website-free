@@ -1,86 +1,116 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { scrollReveal, staggerContainer } from "@/lib/motion-tokens";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeInUp, slowTransition } from "@/lib/motion-tokens";
 import { content } from "@/lib/placeholder-content";
+import Image from "next/image";
+import { X } from "lucide-react";
 
-export function PersonalMessageSection() {
+export function FinalNoteSection() {
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
   return (
     <section
-      id="personal-message"
-      className="min-h-screen flex items-center justify-center px-6 py-20"
+      id="final-note"
+      className="min-h-screen flex items-center justify-center px-6 py-20 relative"
     >
       <motion.div
-        variants={staggerContainer}
         initial="initial"
         whileInView="animate"
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-3xl"
+        viewport={{ once: true }}
+        className="max-w-3xl text-center"
       >
-        {/* Section Title */}
-        <motion.h2
-          {...scrollReveal}
-          className="text-center mb-16 text-[var(--primary)]"
+        {/* Final Message */}
+        <motion.p
+          variants={fadeInUp}
+          transition={slowTransition}
+          className="text-2xl md:text-3xl mb-8 text-[var(--text-secondary)] leading-relaxed"
         >
-          {content.personalMessage.title}
-        </motion.h2>
+          {content.finalNote.message}
+        </motion.p>
 
-        {/* Message Paragraphs - Line by Line */}
-        <div className="space-y-8">
-          {content.personalMessage.paragraphs.map((paragraph, index) => (
-            <motion.p
-              key={index}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                duration: 0.8,
-                delay: index * 0.15,
-                ease: "easeInOut",
-              }}
-              className="text-[var(--text-secondary)] text-center leading-relaxed"
-            >
-              {paragraph}
-            </motion.p>
-          ))}
-        </div>
-        
-        {/* Scroll Indicator */}
-        <motion.div
-           initial={{ opacity: 0 }}
-           whileInView={{ opacity: 1 }}
-           transition={{ delay: 2, duration: 1 }}
-           className="mt-16 flex justify-center"
+        {/* Closing Statement */}
+        <motion.p
+          variants={fadeInUp}
+          transition={{ ...slowTransition, delay: 0.3 }}
+          className="text-3xl md:text-4xl lg:text-5xl mb-12 text-[var(--primary)] font-light italic"
         >
-          <motion.button
-            onClick={() => {
-              const nextSection = document.getElementById("memory-gallery");
-              if (nextSection) {
-                nextSection.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="flex flex-col items-center gap-2 text-[var(--accent)] hover:text-[var(--primary)] transition-colors cursor-pointer"
-            aria-label="Scroll to next section"
-          >
-            <span className="text-sm font-medium tracking-widest uppercase">Read On</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M19 12l-7 7-7-7"/>
-            </svg>
-          </motion.button>
+          {content.finalNote.closing}
+        </motion.p>
+
+        {/* Symbol - Forever / Surprise Button */}
+        <motion.button
+          onClick={() => setIsPopupOpen(true)}
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ ...slowTransition, delay: 0.6 }}
+          className="inline-block px-8 py-4 rounded-full bg-[var(--primary)] text-white text-xl font-medium soft-shadow-lg hover:bg-[var(--accent)] transition-colors cursor-pointer"
+        >
+          {content.finalNote.symbol}
+        </motion.button>
+
+        {/* Gentle Fade Out Effect */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.5 }}
+          viewport={{ once: true }}
+          transition={{ duration: 2, delay: 1 }}
+          className="mt-20 text-[var(--text-secondary)] text-sm"
+        >
+          Made with love, just for you
         </motion.div>
       </motion.div>
+
+      {/* Popup Modal */}
+      <AnimatePresence>
+        {isPopupOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setIsPopupOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[var(--background)] p-8 rounded-soft max-w-md w-full relative soft-shadow-lg text-center border-4 border-white"
+            >
+
+
+              <div className="relative w-full aspect-[4/3] mb-6 rounded-2xl overflow-hidden bg-gray-100">
+                <Image
+                  src={content.finalPopup.imagePlaceholder}
+                  alt="Surprise!"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              <button
+                onClick={() => setIsPopupOpen(false)}
+                className="absolute top-4 right-4 z-10 p-2 text-[var(--text-secondary)] bg-white/50 backdrop-blur-md hover:bg-white/80 rounded-full transition-all soft-shadow-sm"
+              >
+                <X size={20} />
+              </button>
+
+              <h3 className="text-2xl md:text-3xl text-[var(--primary)] mb-4">
+                {content.finalPopup.title}
+              </h3>
+              
+              <p className="text-[var(--text-secondary)] leading-relaxed">
+                {content.finalPopup.subtitle}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
